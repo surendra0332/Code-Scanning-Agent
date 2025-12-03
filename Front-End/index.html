@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Scanner Agent</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-frame">
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <header class="top-header">
+                <marquee  behavior="alternate" direction="left" style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-bottom: 10px;">Designed by Surendra & Siva @CoastalSeven-B3</marquee>
+                <div class="header-content">
+                    <div class="header-title">
+                        <h1>Code Scanner Agent</h1>
+                        <p>Security & Quality Analysis</p>
+                    </div>
+                    <div class="horizontal-nav">
+                        <button class="nav-item active" data-section="scan">
+                            <span class="nav-icon">🔍</span>
+                            <span class="nav-text">New Scan</span>
+                        </button>
+                        <button class="nav-item" data-section="results">
+                            <span class="nav-icon">📊</span>
+                            <span class="nav-text">Results</span>
+                        </button>
+                        <button class="nav-item" data-section="history">
+                            <span class="nav-icon">📋</span>
+                            <span class="nav-text">History</span>
+                        </button>
+                        <button class="nav-item" data-section="settings">
+                            <span class="nav-icon">⚙️</span>
+                            <span class="nav-text">Settings</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content-area">
+            <!-- Scan Form -->
+            <section class="scan-section">
+                <h2>Start New Scan</h2>
+                <form id="scanForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="repoUrl">Repository URL:</label>
+                        <input type="url" id="repoUrl" name="repo_url" required 
+                               placeholder="https://github.com/octocat/Hello-World.git">
+                        <small>Try these examples:
+                            <a href="#" onclick="document.getElementById('repoUrl').value='https://github.com/octocat/Hello-World.git'">Hello-World</a> | 
+                            <a href="#" onclick="document.getElementById('repoUrl').value='https://github.com/python/cpython.git'">Python</a> | 
+                            <a href="#" onclick="document.getElementById('repoUrl').value='https://github.com/microsoft/vscode.git'">VS Code</a>
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="unitTestReport">Unit Test Report (Required):</label>
+                        <input type="file" id="unitTestReport" name="unit_test_report" accept=".json" required>
+                        <small><strong>Required:</strong> Upload a JSON file containing unit test results for this specific repository. 
+                            <a href="/sample_unit_test.json" download>Download sample format</a>
+                        </small>
+                    </div>
+                    
+                    <button type="submit" id="startScanBtn">Start Scan</button>
+                </form>
+            </section>
+
+            <!-- Current Scan Status -->
+            <section class="status-section" id="statusSection" style="display: none;">
+                <h2>Scan Status</h2>
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="job-id">Job ID: <span id="currentJobId"></span></span>
+                        <span class="status-badge" id="statusBadge">queued</span>
+                    </div>
+                    <div class="status-details" id="statusDetails"></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scan Results -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="section-header">
+                    <h2>Scan Results</h2>
+                    <div class="header-buttons">
+                        <button id="downloadPdfBtn" class="btn-download">📄 Download Report</button>
+                        <button id="downloadJsonBtn" class="btn-download">📊 Download JSON</button>
+                        <button id="closeResultsBtn" class="btn-secondary">✕ Close</button>
+                    </div>
+                </div>
+                <div class="results-summary" id="resultsSummary"></div>
+                <div class="issues-container" id="issuesContainer"></div>
+                <div class="minimal-suggestions" id="minimalSuggestions" style="display: none;">
+                    <h3>🔧 Minimal Code Suggestions</h3>
+                    <div id="minimalContent"></div>
+                </div>
+            </section>
+
+            <!-- All Scans -->
+            <section class="scans-section">
+                <div class="section-header">
+                    <h2>All Scans</h2>
+                    <div class="header-buttons">
+                        <button id="deleteModeBtn" class="btn-delete">Delete Mode</button>
+                        <button id="selectAllBtn" class="btn-secondary" style="display: none;">Select All</button>
+                        <button id="deleteSelectedBtn" class="btn-delete" style="display: none;">Delete Selected</button>
+                        <button id="cancelDeleteBtn" class="btn-secondary" style="display: none;">Cancel</button>
+                        <button id="refreshScansBtn" class="btn-secondary">Refresh</button>
+                    </div>
+                </div>
+                <div class="scans-list" id="scansList"></div>
+            </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Report Type Modal -->
+    <div id="reportModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generate Report</h3>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Choose how you want to view or download the scan report:</p>
+                <div class="report-options">
+                    <button id="viewOnlineBtn" class="report-option-btn">
+                        <span class="icon">👁️</span>
+                        <span class="text">View Online</span>
+                        <small>View results in browser</small>
+                    </button>
+                    <button id="downloadPdfModalBtn" class="report-option-btn">
+                        <span class="icon">📄</span>
+                        <span class="text">Download PDF</span>
+                        <small>Professional report format</small>
+                    </button>
+                    <button id="downloadJsonModalBtn" class="report-option-btn">
+                        <span class="icon">📊</span>
+                        <span class="text">Download JSON</span>
+                        <small>Machine-readable format</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
