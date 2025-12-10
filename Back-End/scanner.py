@@ -48,6 +48,28 @@ class CodeScanner:
             
         return line
     
+    def _get_code_snippet(self, file_path, line_number, context_lines=0):
+        """Extract code snippet from file"""
+        try:
+            full_path = os.path.join(self.temp_dir, file_path) if self.temp_dir else file_path
+            if not os.path.exists(full_path):
+                # Try relative path if full path fails
+                if os.path.exists(file_path):
+                    full_path = file_path
+                else:
+                    return ""
+            
+            with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+                
+            if 1 <= line_number <= len(lines):
+                # Just return the single line for now to keep it simple
+                return lines[line_number - 1].strip()
+                
+            return ""
+        except Exception:
+            return ""
+    
     def clone_repo(self, repo_url):
         """Clone repository to temporary directory"""
         self.repo_url = repo_url
@@ -113,7 +135,8 @@ class CodeScanner:
                             'line': issue['line_number'],
                             'severity': issue['issue_severity'],
                             'issue': issue_text,
-                            'type': 'security'
+                            'type': 'security',
+                            'code_snippet': self._get_code_snippet(issue['filename'], issue['line_number'])
                         }
                         # Add minimal code suggestion
                         issue_data['minimal_fix'] = self._generate_minimal_fix(issue_data)
@@ -163,7 +186,8 @@ class CodeScanner:
                                 'line': issue['line'],
                                 'severity': issue['type'],
                                 'issue': message,
-                                'type': 'quality'
+                                'type': 'quality',
+                                'code_snippet': self._get_code_snippet(issue['path'], issue['line'])
                             })
                     if issues:
                         print(f"Pylint found {len(issues)} quality issues")
@@ -357,7 +381,8 @@ class CodeScanner:
                                                 'line': line_num,
                                                 'severity': severity,
                                                 'issue': message,
-                                                'type': 'security'
+                                                'type': 'security',
+                                                'code_snippet': line_content
                                             })
                                         break
                     
@@ -512,7 +537,8 @@ class CodeScanner:
                                             'line': line_num,
                                             'severity': severity,
                                             'issue': message,
-                                            'type': 'quality'
+                                            'type': 'quality',
+                                            'code_snippet': line_content
                                         })
                                     break
                     

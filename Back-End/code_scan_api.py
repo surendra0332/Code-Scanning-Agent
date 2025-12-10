@@ -9,9 +9,7 @@ import threading
 from datetime import datetime
 from scanner import CodeScanner
 from database import ScanDatabase
-from intelligent_validator import IntelligentValidator
 from report_generator import generate_report_for_scan
-from repo_validator import RepoValidator
 from unit_test_validator import UnitTestReportValidator
 import os
 import json
@@ -434,7 +432,7 @@ def delete_scan(job_id: str):
 
 # WORKING DOWNLOAD ENDPOINTS
 @app.get('/api/download/{job_id}/json')
-def download_json(job_id: str):
+def download_json(job_id: str, view: bool = False):
     """Download JSON report"""
     job = scan_jobs.get(job_id) or db.get_scan(job_id)
     if not job:
@@ -455,14 +453,15 @@ def download_json(job_id: str):
         "completed_at": job.get('completed_at', '')
     }
     
+    disposition = "inline" if view else f"attachment; filename=report_{job_id[:8]}.json"
     return Response(
         content=json.dumps(report, indent=2),
         media_type='application/json',
-        headers={"Content-Disposition": f"attachment; filename=report_{job_id[:8]}.json"}
+        headers={"Content-Disposition": disposition}
     )
 
 @app.get('/api/download/{job_id}/pdf')
-def download_pdf(job_id: str):
+def download_pdf(job_id: str, view: bool = False):
     """Download comprehensive PDF report"""
     job = scan_jobs.get(job_id) or db.get_scan(job_id)
     if not job:
@@ -524,6 +523,14 @@ def download_pdf(job_id: str):
             pdf.multi_cell(0, 5, f"File: {issue.get('file', 'N/A')} (Line {issue.get('line', 'N/A')})")
             pdf.multi_cell(0, 5, f"Issue: {issue.get('issue', 'N/A')}")
             
+            # Code Snippet
+            code_snippet = issue.get('code_snippet')
+            if code_snippet:
+                pdf.set_font("Courier", '', 8)
+                pdf.set_fill_color(240, 240, 240)
+                pdf.multi_cell(0, 4, f"Code: {code_snippet}", 0, 'L', True)
+                pdf.set_font("Arial", '', 9)
+            
             # Fix Suggestion
             minimal_fix = issue.get('minimal_fix')
             if minimal_fix:
@@ -543,17 +550,18 @@ def download_pdf(job_id: str):
         # FPDF output returns a string in latin-1 encoding by default in this version
         pdf_content = pdf.output(dest='S').encode('latin-1')
         
+        disposition = "inline" if view else f"attachment; filename=report_{job_id[:8]}.pdf"
         return Response(
             content=pdf_content,
             media_type='application/pdf',
-            headers={"Content-Disposition": f"attachment; filename=report_{job_id[:8]}.pdf"}
+            headers={"Content-Disposition": disposition}
         )
     except Exception as e:
         print(f"PDF Generation Error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
 @app.get('/api/download/{job_id}/txt')
-def download_txt(job_id: str):
+def download_txt(job_id: str, view: bool = False):
     """Download comprehensive text report"""
     job = scan_jobs.get(job_id) or db.get_scan(job_id)
     if not job:
@@ -642,6 +650,10 @@ Quality Categories:
             content += f"   File: {issue.get('file', '')} (Line {issue.get('line', '')})\n"
             content += f"   Type: {issue.get('type', '').title()}\n"
             
+            code_snippet = issue.get('code_snippet')
+            if code_snippet:
+                content += f"   Code: {code_snippet}\n"
+            
             minimal_fix = issue.get('minimal_fix')
             if minimal_fix:
                 content += f"   Fix: {minimal_fix.get('suggestion', '')}\n"
@@ -674,12 +686,19 @@ DETAILED ISSUES
 
             content += f"{i}. {issue.get('type', '').upper()}: {issue.get('issue', '')}\n"
             content += f"   File: {issue.get('file', '')} (Line {issue.get('line', '')})\n"
-            content += f"   Severity: {issue.get('severity', '')}\n\n"
+            content += f"   Severity: {issue.get('severity', '')}\n"
+            
+            code_snippet = issue.get('code_snippet')
+            if code_snippet:
+                content += f"   Code: {code_snippet}\n"
+            
+            content += "\n"
     
+    disposition = "inline" if view else f"attachment; filename=report_{job_id[:8]}.txt"
     return Response(
         content=content,
         media_type='text/plain',
-        headers={"Content-Disposition": f"attachment; filename=report_{job_id[:8]}.txt"}
+        headers={"Content-Disposition": disposition}
     )
 
 

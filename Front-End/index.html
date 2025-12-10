@@ -100,9 +100,39 @@
                     <div class="section-header">
                         <h2>Scan Results</h2>
                         <div class="header-buttons">
-                            <button id="downloadPdfBtn" class="btn-download">📄 PDF</button>
-                            <button id="downloadJsonBtn" class="btn-download">📊 JSON</button>
-                            <button id="downloadTxtBtn" class="btn-download">📝 TXT</button>
+                            <!-- PDF Dropdown -->
+                            <div class="dropdown">
+                                <button class="btn-download dropbtn">📄 PDF ▼</button>
+                                <div class="dropdown-content">
+                                    <a href="javascript:void(0)" class="dropdown-action" data-action="view"
+                                        data-format="pdf">👁️ View Online</a>
+                                    <a href="javascript:void(0)" class="dropdown-action" data-action="download"
+                                        data-format="pdf">⬇️ Download</a>
+                                </div>
+                            </div>
+
+                            <!-- JSON Dropdown -->
+                            <div class="dropdown">
+                                <button class="btn-download dropbtn">📊 JSON ▼</button>
+                                <div class="dropdown-content">
+                                    <a href="javascript:void(0)" class="dropdown-action" data-action="view"
+                                        data-format="json">👁️ View Online</a>
+                                    <a href="javascript:void(0)" class="dropdown-action" data-action="download"
+                                        data-format="json">⬇️ Download</a>
+                                </div>
+                            </div>
+
+                            <!-- TXT Dropdown -->
+                            <div class="dropdown">
+                                <button class="btn-download dropbtn">📝 TXT ▼</button>
+                                <div class="dropdown-content">
+                                    <a href="javascript:void(0)" class="dropdown-action" data-action="view"
+                                        data-format="txt">👁️ View Online</a>
+                                    <a href="javascript:void(0)" class="dropdown-action" data-action="download"
+                                        data-format="txt">⬇️ Download</a>
+                                </div>
+                            </div>
+
                             <button id="closeResultsBtn" class="btn-secondary">✕ Close</button>
                         </div>
                     </div>

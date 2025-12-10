@@ -190,21 +190,20 @@ class CodeScannerApp {
         });
 
         // Direct download buttons
-        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
-            if (this.currentJobId) {
-                this.directDownload('pdf');
-            }
-        });
+        // Dropdown actions (delegated)
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('dropdown-action')) {
+                e.preventDefault();
+                const action = e.target.dataset.action;
+                const format = e.target.dataset.format;
 
-        document.getElementById('downloadJsonBtn').addEventListener('click', () => {
-            if (this.currentJobId) {
-                this.directDownload('json');
-            }
-        });
+                console.log(`Dropdown action clicked: ${action} ${format}`);
 
-        document.getElementById('downloadTxtBtn').addEventListener('click', () => {
-            if (this.currentJobId) {
-                this.directDownload('txt');
+                if (action === 'view') {
+                    this.viewReport(format);
+                } else if (action === 'download') {
+                    this.downloadReport(format);
+                }
             }
         });
 
@@ -559,6 +558,12 @@ class CodeScannerApp {
             </div>
         ` : '';
 
+        const snippetHTML = issue.code_snippet ? `
+            <div class="code-snippet">
+                <code>${issue.code_snippet}</code>
+            </div>
+        ` : '';
+
         return `
             <div class="issue-item ${issue.type}">
                 <div class="issue-header">
@@ -566,6 +571,7 @@ class CodeScannerApp {
                     <span class="issue-severity severity-${severityClass}">${issue.severity || 'Medium'}</span>
                 </div>
                 <div class="issue-description">${issue.issue}</div>
+                ${snippetHTML}
                 ${minimalFixHTML}
             </div>
         `;
@@ -747,43 +753,24 @@ class CodeScannerApp {
         }
     }
 
-    async downloadReport(format) {
+    viewReport(format) {
+        console.log(`View report clicked: ${format}, Job ID: ${this.currentJobId}`);
         if (!this.currentJobId) {
-            this.showError('No scan selected for download');
+            this.showError('No scan selected for viewing');
             return;
         }
 
-        try {
-            this.showLoading(`Downloading ${format.toUpperCase()} report...`);
-
-            // Use clean download URLs
-            const response = await fetch(`${this.baseUrl}/download/${this.currentJobId}/${format}`);
-
-            if (!response.ok) {
-                throw new Error(`Download failed: ${response.status}`);
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `report_${this.currentJobId.substring(0, 8)}.${format === 'pdf' ? 'txt' : format}`;
-
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            window.URL.revokeObjectURL(url);
-
-            this.showSuccess(`${format.toUpperCase()} report downloaded successfully!`);
-
-        } catch (error) {
-            console.error('Download error:', error);
-            this.showError(`Failed to download ${format} report: ${error.message}`);
-        }
+        const viewUrl = `${this.baseUrl}/download/${this.currentJobId}/${format}?view=true`;
+        console.log(`Opening view URL: ${viewUrl}`);
+        window.open(viewUrl, '_blank');
     }
+
+    downloadReport(format) {
+        console.log(`Download report clicked: ${format}, Job ID: ${this.currentJobId}`);
+        this.directDownload(format);
+    }
+
+
 
     async deleteScan(jobId) {
         const confirmed = confirm('Are you sure you want to delete this scan report? This action cannot be undone.');

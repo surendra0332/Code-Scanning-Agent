@@ -116,7 +116,8 @@ class SecurityBooster:
                         'line': line_num,
                         'severity': severity,
                         'issue': message,
-                        'type': 'security'
+                        'type': 'security',
+                        'code_snippet': line_content
                     })
                     break  # One issue per line
         
